@@ -10,7 +10,7 @@ class GitRepoReq(Requirement):
         self.repo = repo
         self.dest = dest
         self.branch = branch
-        
+
         try:
             import dulwich
         except ImportError:
@@ -36,3 +36,5 @@ class GitRepoReq(Requirement):
         local = Repo.init(self.dest, mkdir=True)
         client.fetch("/", local)
         print "has index: ", local.has_index()
+        for fn in local.open_index():
+            print 'got: ', fn
