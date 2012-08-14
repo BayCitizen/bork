@@ -3,13 +3,13 @@ import os
 from . import Requirement
 
 
-class Service(Requirement):
+class ServiceReq(Requirement):
     service_name = str()
     """Service is a wrapper for upstarts service protocol"""
     def __init__(self, service_name=None, restart_on_boot=None, *arg, **kwargs):
         self.service_name = service_name
         self.restart_on_boot
-        super(Service, self).__init__()
+        super(Service, self).__init__(*args, **kwargs)
 
     def start_service(self):
         print 'starting '

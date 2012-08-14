@@ -1,30 +1,31 @@
 import shutil
 import os
 import hashlib
+import subprocess
 
 from . import Requirement
 
 
 class FileReq(Requirement):
     """Basically enforces a file copy and provides a parrent class for the other file operations"""
-    def __init__(self, src=None, dest=None, perms=None, owner=None,  *args, **kwargs):
+    def __init__(self, src=None, target=None, perms=None, owner=None, *args, **kwargs):
         super(FileReq, self).__init__(*args, **kwargs)
         self.src = src
-        self.dest = dest
+        self.target = target
         self.perms = perms
         self.owner = owner
         #verify permissions
 
     def satisfy(self):
         Requirement.satisfy(self)
-        shutil.copy2(self.src, self.dest)
+        shutil.copy2(self.src, self.target)
         self.set_perms()
 
     def set_perms(self):
         if self.owner:
-            os.chown(self.dest, self.owner)
+            os.chown(self.target, self.owner)
         if self.perms:
-            os.chmod(self.dest, self.perms)
+            os.chmod(self.target, self.perms)
 
     @property
     def source_contents(self):
@@ -34,7 +35,7 @@ class FileReq(Requirement):
         self.src_hash = hashlib.sha1(self.source_contents).hexdigest()
 
         try:
-            if hashlib.sha1(open(self.dest).read()).hexdigest() == self.src_hash:
+            if hashlib.sha1(open(self.target).read()).hexdigest() == self.src_hash:
                 return True
         except Exception:
             pass
@@ -43,25 +44,66 @@ class FileReq(Requirement):
 
 class TemplatedFileReq(FileReq):
     """Provides templated file writing. Useful for config files"""
-    def __init__(self, template=None, dest=None, context=None, perms=None, *args, **kwargs):
+    def __init__(self, template=None, target=None, context=None, perms=None, *args, **kwargs):
         self.template = template
         self.context = context
         super(TemplatedFileReq, self).__init__(*args, **kwargs)
 
     @property
     def source_contents(self):
-        return template % context
+        if os.isfile(self.template):
+            template = open(self.template, 'r').read()
+        else:
+            template = self.template
+        return template % self.context
 
     def satisfy(self):
         Requirement.satisfy(self)
-        dFile = open(self.dest, 'w')
-        print dFile self.source_contents
+        dFile = open(self.target, 'w')
+        dFile.write(self.source_contents)
+        dFile.close()
         self.set_perms()
 
 
+class FileExistsReq(FileReq):
+    def __init__(self, target=None, directory=False, *args, **kwargs):
+        self.target = target
+        self.directory = directory
+        super(FileExistsReq, self).__init__(*args, **kwargs)
+
+    def satisfied(self):
+        if os.path.exists(self.target):
+            if os.path.isfile(self.target):
+                return not self.directory
+            else:
+                return self.directory
+        return False
+
+    def satisfy(self):
+        raise NotImplementedError
+
+
+class FileDoesNotExistReq(FileReq):
+    def __init__(self, target=None, force=False, *args, **kwargs):
+        self.target = target
+        self.force = force
+        super(FileExistsReq, self).__init__(*args, **kwargs)
+
+    def satisfied(self):
+        if os.path.exists(self.target):
+            return False
+        else:
+            return True
+
+    def satisfy(self):
+        #delete file
+        #hack! dont worry about force for now
+        os.remove(self.target)
+
+
 class LinkedFileReq(FileReq):
-    """Sets up a link from dest to src, hard or soft. """
-    def __init__(self, symbolic=True,  *args, **kwargs):
+    """Sets up a link from target to src, hard or soft. """
+    def __init__(self, symbolic=True, *args, **kwargs):
         super(LinkedFileReq, self).__init__(*args, **kwargs)
         #check if exists
 
@@ -69,7 +111,7 @@ class LinkedFileReq(FileReq):
         if self.symbolic:
             try:
                 #test for existing link 
-                if os.readlink(self.dest) == self.src:
+                if os.readlink(self.target) == self.src:
                     return True
             except Exception, e:
                 print e
@@ -80,22 +122,42 @@ class LinkedFileReq(FileReq):
 
     def satisfy(self):
         if self.symbolic:
-            os.symlink(self.src, self.dest)
+            os.symlink(self.src, self.target)
         else:
-            os.link(self.src, self.dest)
+            os.link(self.src, self.target)
         self.set_perms()
+
+class DirectoryReq(FileExistsReq):
+    def __init__(self, mode=None, *args, **kwargs):
+        self.mode = mode
+        kwargs['directory'] = True
+        super(DirectoryReq, self).__init__(*args, **kwargs)
+
+    def satisfy(self):
+        os.makedirs(self.target)
 
 
 class CommandReq(Requirement):
     """Runs a command, stores the result in self.result"""
-    def __init__(self, command=None, *args, **kwargs):
+    def __init__(self, command=None, unless=None, cwd=None, *args, **kwargs):
         super(CommandReq, self).__init__(*args, **kwargs)
         self.command = command
+        self.unless = unless
+        self.cwd = cwd
 
     def satisfied(self):
+        if self.unless:
+            if not subprocess.call(self.unless, shell=True):
+                return True
         return False
 
     def satisfy(self):
         Requirement.satisfy(self)
         print "executing command: ", self.command
-        self.result = os.popen(self.command)
+        self.result = subprocess.Popen(self.command, shell=True, cwd=self.cwd)
+        self.result.wait()
+        print self.result.stdout
+        print self.result.stderr
+        print self.result.returncode
+
+
