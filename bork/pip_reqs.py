@@ -1,5 +1,5 @@
-from . import Requirement 
-from .command_reqs import CommandReq
+from .base_req import Requirement 
+from .os_reqs import CommandReq
 
 class PipReq(Requirement):
     def __init__(self, target=None, *args, **kwargs):

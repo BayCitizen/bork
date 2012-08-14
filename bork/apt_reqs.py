@@ -1,6 +1,6 @@
 import apt
 
-from . import Requirement
+from .base_req import Requirement
 from .os_reqs import CommandReq
 
 

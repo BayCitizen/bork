@@ -3,7 +3,7 @@ import os
 import hashlib
 import subprocess
 
-from . import Requirement
+from .base_req import Requirement
 
 
 class FileReq(Requirement):
@@ -110,7 +110,7 @@ class LinkedFileReq(FileReq):
     def satisfied(self):
         if self.symbolic:
             try:
-                #test for existing link 
+                #test for existing link
                 if os.readlink(self.target) == self.src:
                     return True
             except Exception, e:
@@ -126,6 +126,7 @@ class LinkedFileReq(FileReq):
         else:
             os.link(self.src, self.target)
         self.set_perms()
+
 
 class DirectoryReq(FileExistsReq):
     def __init__(self, mode=None, *args, **kwargs):
@@ -159,5 +160,3 @@ class CommandReq(Requirement):
         print self.result.stdout
         print self.result.stderr
         print self.result.returncode
-
-

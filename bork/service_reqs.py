@@ -1,6 +1,6 @@
 import os
 
-from . import Requirement
+from .base_req import Requirement
 
 
 class ServiceReq(Requirement):

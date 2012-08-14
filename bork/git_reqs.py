@@ -1,8 +1,6 @@
-import os
-
-
-from . import Requirement
+from .base_req import Requirement
 from .pip_reqs import PipReq
+
 
 class GitRepoReq(Requirement):
     def __init__(self, repo=None, target=None, branch=None, *args, **kwargs):
@@ -15,7 +13,7 @@ class GitRepoReq(Requirement):
             import dulwich
         except ImportError:
             if not self.deps:
-                self.deps=[]
+                self.deps = []
             self.deps.append(PipReq('dulwich'))
 
     def satisfied(self):
