@@ -4,3 +4,5 @@ from .os_reqs import FileReq, TemplatedFileReq, LinkedFileReq, FileExistsReq, Fi
 from .pip_reqs import PipReq
 from .service_reqs import ServiceReq
 from .base_req import Requirement
+
+__version__="0.0.2",

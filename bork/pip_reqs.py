@@ -1,10 +1,13 @@
 from .base_req import Requirement 
 from .os_reqs import CommandReq
 
+#todo :
+#add support for requirement files
+
 class PipReq(Requirement):
-    def __init__(self, target=None, *args, **kwargs):
+    def __init__(self, packages=None, *args, **kwargs):
         super(PipReq, self).__init__(*args, **kwargs)
-        self.target = target
+        self.packages = packages
 
         try:
             import pip
@@ -21,6 +24,8 @@ class PipReq(Requirement):
         return False
 
     def satisfy(self):
+        Requirement.satisfy(self)
     	import pip
-    	pip.main(initial_args=['install', self.target])
+        for package in self.packages:
+    	   pip.main(initial_args=['install', package])
 

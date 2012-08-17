@@ -6,10 +6,10 @@ from .base_req import Requirement
 class ServiceReq(Requirement):
     service_name = str()
     """Service is a wrapper for upstarts service protocol"""
-    def __init__(self, service_name=None, restart_on_boot=None, *arg, **kwargs):
+    def __init__(self, service_name=None, restart_on_boot=None, *args, **kwargs):
         self.service_name = service_name
-        self.restart_on_boot
-        super(Service, self).__init__(*args, **kwargs)
+        self.restart_on_boot=restart_on_boot
+        super(ServiceReq, self).__init__(*args, **kwargs)
 
     def start_service(self):
         print 'starting '
@@ -56,7 +56,7 @@ respawn limit 5 90
 
 
     def execute(self):
-        super(Service, self).execute()
+        super(ServiceReq, self).execute()
         if not self.is_running():
             self.start_service()
         if not self.start_on_boot() and self.restart_on_boot:

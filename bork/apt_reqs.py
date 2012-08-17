@@ -34,12 +34,10 @@ class AptUpgrade(Requirement):
 
 
 class AptReq(Requirement):
-    ppa = ''
-    packages = ['', ]
-
     """AptReq handles package adding and removing on debian based systems"""
     def __init__(self, source=None, packages=None, exclude=None, *args, **kwargs):
         super(AptReq, self).__init__(*args, **kwargs)
+        self.source=source
         if source:
             if source.split(':', 1)[0] == 'ppa':
                 self.ppa = source
@@ -49,26 +47,27 @@ class AptReq(Requirement):
                 #hack!
                 self.deps.append(
                     CommandReq(command="""grep -q  "%s"  /etc/apt/sources.list||
-                        echo "%s" >> /etc/apt/sources.list"""% (source, source))
+                        echo "%s" >> /etc/apt/sources.list""" % (source, source))
                     )
         self.packages = packages
         self.exclude = exclude
         try:
             __import__('softwareproperties.SoftwareProperties')
         except ImportError:
-            if not self.deps:
-                    self.deps = []
-            self.deps.append(
-                AptReq(packages=["python-software-properties"]))
+            if not "python-software-properties" in self.packages:
+                if not self.deps:
+                        self.deps = []
+                self.deps.append(
+                    AptReq(packages=["python-software-properties"]))
 
     def satisfied(self):
         apt_cache = cache_update()
-        #check for ppa/sources
-        for source in apt.aptsources.sourceslist:
-            print source
         #check for installed package[s]
         for pkg_name in self.packages:
-            p = apt_cache[pkg_name]
+            try:
+                p = apt_cache[pkg_name]
+            except KeyError:
+                return False
             if not p.isInstalled or p.isUpgradable:
                 print self, " not satisfied"
                 print p.sourcePackageName, ' not up to date'
@@ -76,7 +75,8 @@ class AptReq(Requirement):
 
     def satisfy(self):
         Requirement.satisfy(self)
-        if self.ppa:
+        if hasattr(self, 'ppa'):
+            print self.ppa
             #hack!
             from softwareproperties.SoftwareProperties import SoftwareProperties
             print "adding ppa: %s" % self.ppa

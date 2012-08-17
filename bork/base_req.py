@@ -1,7 +1,6 @@
 class Requirement(object):
     """docstring for Requirement"""
     def __init__(self, deps=None):
-        super(Requirement, self).__init__()
         self.deps = deps
 
     def satisfied(self):
@@ -15,7 +14,6 @@ class Requirement(object):
         print 'satisfying:', self
         if self.deps:
             for dep in self.deps:
-                #if not dep.satisfied():
-                dep.satisfy()
-
+                if not dep.satisfied():
+                    dep.satisfy()
 

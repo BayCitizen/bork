@@ -44,14 +44,14 @@ class FileReq(Requirement):
 
 class TemplatedFileReq(FileReq):
     """Provides templated file writing. Useful for config files"""
-    def __init__(self, template=None, target=None, context=None, perms=None, *args, **kwargs):
+    def __init__(self, template=None, context=None, *args, **kwargs):
         self.template = template
         self.context = context
         super(TemplatedFileReq, self).__init__(*args, **kwargs)
 
     @property
     def source_contents(self):
-        if os.isfile(self.template):
+        if os.path.exists(self.template) and os.path.isfile(self.template):
             template = open(self.template, 'r').read()
         else:
             template = self.template
@@ -66,8 +66,7 @@ class TemplatedFileReq(FileReq):
 
 
 class FileExistsReq(FileReq):
-    def __init__(self, target=None, directory=False, *args, **kwargs):
-        self.target = target
+    def __init__(self, directory=False, *args, **kwargs):
         self.directory = directory
         super(FileExistsReq, self).__init__(*args, **kwargs)
 
@@ -80,14 +79,14 @@ class FileExistsReq(FileReq):
         return False
 
     def satisfy(self):
+        Requirement.satisfy(self)
         raise NotImplementedError
 
 
 class FileDoesNotExistReq(FileReq):
-    def __init__(self, target=None, force=False, *args, **kwargs):
-        self.target = target
+    def __init__(self, force=False, *args, **kwargs):
         self.force = force
-        super(FileExistsReq, self).__init__(*args, **kwargs)
+        super(FileDoesNotExistReq, self).__init__(*args, **kwargs)
 
     def satisfied(self):
         if os.path.exists(self.target):
@@ -96,6 +95,7 @@ class FileDoesNotExistReq(FileReq):
             return True
 
     def satisfy(self):
+        Requirement.satisfy(self)
         #delete file
         #hack! dont worry about force for now
         os.remove(self.target)
@@ -104,6 +104,7 @@ class FileDoesNotExistReq(FileReq):
 class LinkedFileReq(FileReq):
     """Sets up a link from target to src, hard or soft. """
     def __init__(self, symbolic=True, *args, **kwargs):
+        self.symbolic = symbolic
         super(LinkedFileReq, self).__init__(*args, **kwargs)
         #check if exists
 
@@ -111,20 +112,20 @@ class LinkedFileReq(FileReq):
         if self.symbolic:
             try:
                 #test for existing link
-                if os.readlink(self.target) == self.src:
+                if os.readlink(self.src) == self.target:
                     return True
             except Exception, e:
-                print e
                 return False
         #testing hard links is hard, test file contents instead for now
         #HACK!
         return super(LinkedFileReq, self).satisfied()
 
     def satisfy(self):
+        Requirement.satisfy(self)
         if self.symbolic:
-            os.symlink(self.src, self.target)
+            os.symlink(self.target, self.src)
         else:
-            os.link(self.src, self.target)
+            os.link(self.target, self.src,)
         self.set_perms()
 
 
@@ -135,6 +136,7 @@ class DirectoryReq(FileExistsReq):
         super(DirectoryReq, self).__init__(*args, **kwargs)
 
     def satisfy(self):
+        Requirement.satisfy(self)
         os.makedirs(self.target)
 
 
