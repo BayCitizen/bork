@@ -18,6 +18,7 @@ class FileReq(Requirement):
 
     def satisfy(self):
         Requirement.satisfy(self)
+        print("copying file %s to %s" % (self.src, self.target))
         shutil.copy2(self.src, self.target)
         self.set_perms()
 
@@ -59,6 +60,7 @@ class TemplatedFileReq(FileReq):
 
     def satisfy(self):
         Requirement.satisfy(self)
+        print("writing file %s with template %s using context %s" % (self.target, self.template, self.context))
         dFile = open(self.target, 'w')
         dFile.write(self.source_contents)
         dFile.close()
@@ -80,6 +82,7 @@ class FileExistsReq(FileReq):
 
     def satisfy(self):
         Requirement.satisfy(self)
+        print("File exists: %s \n Aborting!!!!!" % self.target)
         raise NotImplementedError
 
 
@@ -98,6 +101,7 @@ class FileDoesNotExistReq(FileReq):
         Requirement.satisfy(self)
         #delete file
         #hack! dont worry about force for now
+        print("deleteing %s" % self.target)
         os.remove(self.target)
 
 
@@ -114,7 +118,9 @@ class LinkedFileReq(FileReq):
                 #test for existing link
                 if os.readlink(self.src) == self.target:
                     return True
-            except Exception, e:
+                else: 
+                    return False
+            except:
                 return False
         #testing hard links is hard, test file contents instead for now
         #HACK!
@@ -123,8 +129,10 @@ class LinkedFileReq(FileReq):
     def satisfy(self):
         Requirement.satisfy(self)
         if self.symbolic:
+            print("creating symlink %s to %s" % (self.target, self.src))
             os.symlink(self.target, self.src)
         else:
+            print("hard link %s" % self.target)
             os.link(self.target, self.src,)
         self.set_perms()
 
@@ -137,6 +145,7 @@ class DirectoryReq(FileExistsReq):
 
     def satisfy(self):
         Requirement.satisfy(self)
+        print "making the directory %s" % self.target
         os.makedirs(self.target)
 
 

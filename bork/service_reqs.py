@@ -12,9 +12,8 @@ class ServiceReq(Requirement):
         super(ServiceReq, self).__init__(*args, **kwargs)
 
     def start_service(self):
-        print 'starting '
+        print 'starting %s' % self.service_name
         result = os.popen('/sbin/start %s start' % self.service_name).read()
-        print result
 
     def is_running(self):
         result = os.popen('/sbin/status %s' % self.service_name).read()

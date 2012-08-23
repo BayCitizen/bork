@@ -1,38 +1,28 @@
+import os
 from .base_req import Requirement
-from .pip_reqs import PipReq
+from .os_reqs import CommandReq
 
 
 class GitRepoReq(Requirement):
-    def __init__(self, repo=None, target=None, branch=None, *args, **kwargs):
+    def __init__(self, repo=None, target=None, branch="Master", *args, **kwargs):
         super(GitRepoReq, self).__init__(*args, **kwargs)
-        self.repo = repo
         self.target = target
+        self.repo = repo
         self.branch = branch
+        
+        if not self.deps:
+            self.deps = []
 
-        try:
-            import dulwich
-        except ImportError:
-            if not self.deps:
-                self.deps = []
-            self.deps.append(PipReq('dulwich'))
+        self.deps.append(CommandReq(command="git clone -b %s %s %s" % (branch, repo, target)))
+
+    def __str__(self):
+        return "git repo requirement %s branch %s is going to %s" % (self.repo, self.branch, self.target) + self.deps_str()
 
     def satisfied(self):
-        #does a get statis on the repo dir, to check that its there
-        from dulwich.repo import Repo
+        #does a git statis on the repo dir, to check that its there
         try:
-             Repo(self.target)
-             return True
+            if os.path.exists(self.target + '/.git'):
+                return True
         except:
-            return False
-
-    def satisfy(self):
-        Requirement.satisfy(self)
-        print 'checking out %s to %s' % (self.src, self.target)
-        from dulwich.client import get_transport_and_path
-        from dulwich.repo import Repo
-        client = get_transport_and_path(self.repo)
-        local = Repo.init(self.target, mkdir=True)
-        client.fetch("/", local)
-        print "has index: ", local.has_index()
-        for fn in local.open_index():
-            print 'got: ', fn
+            pass
+        return False

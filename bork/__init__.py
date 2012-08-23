@@ -1,8 +1,10 @@
 from .apt_reqs import AptReq, AptUpgrade
 from .git_reqs import GitRepoReq
-from .os_reqs import FileReq, TemplatedFileReq, LinkedFileReq, FileExistsReq, FileDoesNotExistReq, CommandReq
-from .pip_reqs import PipReq
+from .os_reqs import FileReq, TemplatedFileReq, LinkedFileReq, FileExistsReq, FileDoesNotExistReq, CommandReq, DirectoryReq
 from .service_reqs import ServiceReq
 from .base_req import Requirement
+from .pip_reqs import PipReq
+from .virtualenv_reqs import VirtualenvReq
+
 
 __version__="0.0.2",

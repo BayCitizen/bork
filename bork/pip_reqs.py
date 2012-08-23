@@ -13,15 +13,23 @@ class PipReq(Requirement):
             import pip
         except ImportError:
             if not self.deps:
-                self.deps=[]
+                self.deps = []
             self.deps.append(CommandReq(command='easy_install pip'))
+
+    def __str__(self):
+        return "Pip requirement with packages %s " % ', '.join(self.packages) + self.deps_str()
 
     def satisfied(self):
         #vefifes that the package is installed
-        for dist in get_installed_distributions(local_only=True):
-            if dist.key.startswith(self.target) and dist.key :
-                return True
-        return False
+        import pip
+        for pkg in self.packages:
+            exists = False
+            for dist in pip.get_installed_distributions(local_only=True):
+                if dist.key.startswith(pkg) and dist.key:
+                    exists = True
+            if not exists:
+                return False
+        return True
 
     def satisfy(self):
         Requirement.satisfy(self)
