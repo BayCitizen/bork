@@ -23,7 +23,6 @@ class VirtualenvReq(Requirement):
         return os.path.exists("%s/bin/python" % self.directory)
 
     def satisfy(self):
-        super(VirtualenvReq, self).satisfy()
         if self.requirements:
             location = os.path.join(self.directory, 'bin/activate')
             command = "bash -c 'source %s && pip install -r %s'" % (location, self.requirements)

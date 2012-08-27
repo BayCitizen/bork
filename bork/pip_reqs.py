@@ -22,8 +22,10 @@ class PipReq(Requirement):
     def satisfied(self):
         #vefifes that the package is installed
         import pip
+        import pdb; pdb.set_trace()
         for pkg in self.packages:
             exists = False
+
             for dist in pip.get_installed_distributions(local_only=True):
                 if dist.key.startswith(pkg) and dist.key:
                     exists = True
@@ -32,7 +34,6 @@ class PipReq(Requirement):
         return True
 
     def satisfy(self):
-        Requirement.satisfy(self)
     	import pip
         for package in self.packages:
     	   pip.main(initial_args=['install', package])

@@ -6,7 +6,7 @@ from .os_reqs import CommandReq
 
 def cache_update():
     """reloads the apt cache. think of it as a apt-get update"""
-    print "updateing the apt cache"
+    #print "updateing the apt cache"
     apt.apt_pkg.init_config()
     apt.apt_pkg.init_system()
     apt_cache = apt.Cache()
@@ -60,21 +60,24 @@ class AptReq(Requirement):
                 self.deps.append(
                     AptReq(packages=["python-software-properties"]))
 
+    def __str__(self):
+        return "AptReq with packages %s " % ', '.join(self.packages) + self.deps_str()
+
     def satisfied(self):
         apt_cache = cache_update()
         #check for installed package[s]
         for pkg_name in self.packages:
             try:
-                p = apt_cache[pkg_name]
+                pkg = apt_cache[pkg_name]
             except KeyError:
                 return False
-            if not p.isInstalled or p.isUpgradable:
+            if not pkg.isInstalled or pkg.isUpgradable:
                 print self, " not satisfied"
-                print p.sourcePackageName, ' not up to date'
+                print pkg.sourcePackageName, ' not up to date'
                 return False
+        return True
 
     def satisfy(self):
-        Requirement.satisfy(self)
         if hasattr(self, 'ppa'):
             print self.ppa
             #hack!

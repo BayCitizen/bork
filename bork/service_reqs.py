@@ -1,34 +1,70 @@
 import os
+import subprocess
+from subprocess import PIPE
 
 from .base_req import Requirement
 
-
+#still needs a lot of work
 class ServiceReq(Requirement):
-    service_name = str()
     """Service is a wrapper for upstarts service protocol"""
-    def __init__(self, service_name=None, restart_on_boot=None, *args, **kwargs):
+    def __init__(self, service_name=None, restart_on_boot=None, use_upstart=False, *args, **kwargs):
         self.service_name = service_name
-        self.restart_on_boot=restart_on_boot
+        self.restart_on_boot = restart_on_boot
+        self.use_upstart = use_upstart
+
         super(ServiceReq, self).__init__(*args, **kwargs)
 
+    def __str__(self):
+        return "ServiceReq for service %s" % self.service_name + self.deps_str()
+
     def start_service(self):
-        print 'starting %s' % self.service_name
-        result = os.popen('/sbin/start %s start' % self.service_name).read()
+        if self.use_upstart:
+            result = subprocess.Popen('/sbin/start %s start' % self.service_name, shell=True, stdout=PIPE, stderr=PIPE )
+        elif(os.path.exists('/etc/init.d/%s' % self.service_name)):
+            result = subprocess.Popen('/etc/init.d/%s start' % self.service_name, shell=True, stdout=PIPE, stderr=PIPE )
+        else:
+            pass
+            #wtf?
+        stdout, stderr = result.communicate()
+        print stdout
 
     def is_running(self):
-        result = os.popen('/sbin/status %s' % self.service_name).read()
-        if 'running' in result:
-            return True
+        if self.use_upstart:
+            result = subprocess.Popen('/sbin/status %s' % self.service_name, shell=True, stdout=PIPE, stderr=PIPE )
+            stdout, stderr = result.communicate()
+            if 'running' in stdout:
+                return True
+            print stdout, stderr
+            return False
+        else:
+            if(os.path.exists('/etc/init.d/%s' % self.service_name)):
+                status = subprocess.Popen('/etc/init.d/%s status'% self.service_name, shell=True, stdout=PIPE, stderr=PIPE)
+                stdout, stderr = status.communicate()
+                if 'running' in stdout and not status.returncode:
+                    return True
+            #status didnt work
+            print stdout, stderr
+            
+            #in the weeds, use ps aux or maybe use 
+            ps = subprocess.Popen('ps aux', shell=True, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = ps.communicate()
+            if self.service_name in stdout:
+                return True
         return False
 
+
     def start_on_boot(self):
-        result = os.popen('/sbin/initctl show-config %s' % self.service_name).read()
-        if self.service_name in result:
-            if 'start on runlevel [2345]' in result:
-                return True
+        if self.use_upstart:
+            result = subprocess.Popen('/sbin/initctl show-config %s' % self.service_name, shell=True, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = result.communicate()
+
+            if self.service_name in stdout:
+                if 'start on runlevel [2345]' in result:
+                    return True
         else:
-            result = os.popen('ls /etc/rc*.d/S**%s' % self.service_name)
-            if self.service_name in result:
+            result = subprocess.Popen('ls /etc/rc*.d/S**%s' % self.service_name, shell=True, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = result.communicate()
+            if self.service_name in stdout:
                 return True
         return False
 
@@ -51,13 +87,20 @@ respawn limit 5 90
 """ % self.service_name)
             f.close()
         else:
-            os.popen("update-rc.d %s defaults" % self.service_name)
+            result = subprocess.Popen("update-rc.d %s defaults" % self.service_name, shell=True)
+            result.wait()
 
+    def satisfied(self):
+        if self.is_running():
+            if self.restart_on_boot:
+                if self.start_on_boot():
+                    return True
+            else:
+                return True
+        return False
 
-    def execute(self):
-        super(ServiceReq, self).execute()
+    def satisfy(self):
         if not self.is_running():
             self.start_service()
         if not self.start_on_boot() and self.restart_on_boot:
             self.make_start_on_boot()
-
