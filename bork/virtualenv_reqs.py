@@ -1,5 +1,6 @@
 import os
 import subprocess
+
 from .base_req import Requirement
 from . import CommandReq, PipReq
 
@@ -17,18 +18,20 @@ class VirtualenvReq(Requirement):
         self.deps.append(CommandReq(command='virtualenv %s --distribute' % directory))
         self.directory = directory
         self.requirements = requirements
+        self.requirements_installed = not bool(requirements)
 
     def satisfied(self):
         #check to see if the python binary is in the right place
-        return os.path.exists("%s/bin/python" % self.directory)
+        return os.path.exists("%s/bin/python" % self.directory) and self.requirements_installed
 
     def satisfy(self):
-        import pdb; pdb.set_trace()
         if self.requirements:
-            location = os.path.join(self.directory, 'bin/activate')
+            location = os.path.join(self.directory, 'bin', 'activate')
             command = "bash -c 'source %s && pip install -r %s'" % (location, self.requirements)
+            print('exicuting:', command)
             process = subprocess.Popen(command, shell=True)
             process.wait()
+            self.requirements_installed = True
 
 
 class VirtualenvCommandReq(CommandReq):
