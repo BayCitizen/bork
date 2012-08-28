@@ -23,10 +23,12 @@ class VirtualenvReq(Requirement):
         return os.path.exists("%s/bin/python" % self.directory)
 
     def satisfy(self):
+        import pdb; pdb.set_trace()
         if self.requirements:
             location = os.path.join(self.directory, 'bin/activate')
             command = "bash -c 'source %s && pip install -r %s'" % (location, self.requirements)
-            subprocess.Popen(command, shell=True)
+            process = subprocess.Popen(command, shell=True)
+            process.wait()
 
 
 class VirtualenvCommandReq(CommandReq):

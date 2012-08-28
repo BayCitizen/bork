@@ -91,16 +91,15 @@ class TemplatedFileReq(FileReq):
     @property
     def source_contents(self):
         template_path =  os.path.join(os.getcwd(), self.template)
-        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        print template_path
-        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-        print "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
         if os.path.exists(template_path) and os.path.isfile(template_path):
             template = open(template_path, 'r').read()
         else:
             template = self.template
-        return template % self.context
+        try:
+            return template % self.context
+        except KeyError, e:
+            print "missing context %s for %s" % (e, template)
+            raise e
 
     def satisfy(self):
         print("writing file %s with template %s using context %s" % (self.target, self.template, self.context))
@@ -134,7 +133,7 @@ class DirectoryReq(FileExistsReq):
         super(DirectoryReq, self).__init__(*args, **kwargs)
 
     def satisfy(self):
-        print "making the directory %s" % self.target
+        print "making directory %s" % self.target
         os.makedirs(self.target)
 
 

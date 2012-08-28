@@ -3,6 +3,7 @@ from .base_req import Requirement
 from .os_reqs import CommandReq
 from .apt_reqs import AptReq
 
+
 class GitRepoReq(Requirement):
     def __init__(self, repo=None, target=None, branch="master", depth=None, *args, **kwargs):
         super(GitRepoReq, self).__init__(*args, **kwargs)
