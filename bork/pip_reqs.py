@@ -1,5 +1,7 @@
 from .base_req import Requirement 
 from .os_reqs import CommandReq
+import subprocess
+            
 
 #todo :
 #add support for requirement files
@@ -21,13 +23,25 @@ class PipReq(Requirement):
 
     def satisfied(self):
         #vefifes that the package is installed
+        #try pip freeze 
+        process = subprocess.Popen(
+            "pip freeze",
+            shell=True,
+            stdout=subprocess.PIPE
+        )
+        process.wait()
+        pkg_list = process.stdout
+
         import pip
+        #doesnt seem to reload, hence pip freeze.
         for pkg in self.packages:
             exists = False
-
-            for dist in pip.get_installed_distributions(local_only=True):
-                if dist.key.startswith(pkg) and dist.key:
-                    exists = True
+            if pkg in pkg_list:
+                exists = True
+            else:
+                for dist in pip.get_installed_distributions(local_only=True):
+                    if dist.key.startswith(pkg) and dist.key:
+                        exists = True
             if not exists:
                 return False
         return True

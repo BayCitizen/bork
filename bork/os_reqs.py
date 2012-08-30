@@ -13,9 +13,11 @@ class FileReq(Requirement):
     """Basically enforces a file copy and provides a parrent class for the other file operations"""
     def __init__(self, src=None, target=None, *args, **kwargs):
         super(FileReq, self).__init__(*args, **kwargs)
-        self.src = src
+        if src and not src[0] == '/':
+            self.src = os.path.join(os.getcwd(), src)
+        else:
+            self.src = src
         self.target = target
-
 
     def satisfy(self):
         print("copying file %s to %s" % (self.src, self.target))
@@ -47,7 +49,6 @@ class FilePermReq(Requirement):
         self.group = group
         if group:
             self.gid = getgrnam(group).gr_gid
-        
 
     def satisfied(self):
         stats = os.stat(self.target)
@@ -90,7 +91,7 @@ class TemplatedFileReq(FileReq):
 
     @property
     def source_contents(self):
-        template_path =  os.path.join(os.getcwd(), self.template)
+        template_path = os.path.join(os.getcwd(), self.template)
         if os.path.exists(template_path) and os.path.isfile(template_path):
             template = open(template_path, 'r').read()
         else:
