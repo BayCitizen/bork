@@ -13,11 +13,14 @@ class FileReq(Requirement):
     """Basically enforces a file copy and provides a parrent class for the other file operations"""
     def __init__(self, src=None, target=None, *args, **kwargs):
         super(FileReq, self).__init__(*args, **kwargs)
-        if src and not src[0] == '/':
-            self.src = os.path.join(os.getcwd(), src)
-        else:
-            self.src = src
+        self.src = self.absolute_path(src)
         self.target = target
+
+    def absolute_path(self, src):
+        if src and not src[0] == '/':
+            return os.path.join(os.getcwd(), src)
+        else:
+            return src
 
     def satisfy(self):
         print("copying file %s to %s" % (self.src, self.target))
@@ -91,7 +94,7 @@ class TemplatedFileReq(FileReq):
 
     @property
     def source_contents(self):
-        template_path = os.path.join(os.getcwd(), self.template)
+        template_path = self.absolute_path(self.template)
         if os.path.exists(template_path) and os.path.isfile(template_path):
             template = open(template_path, 'r').read()
         else:
