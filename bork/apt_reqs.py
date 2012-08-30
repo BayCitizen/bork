@@ -16,10 +16,11 @@ def cache_update():
 
 
 class AptUpgrade(Requirement):
+    result = False
     """ runs a apt get upgrade in the software."""
     def satisfied(self):
         #upgrade allways must be run
-        return False
+        return bool(self.result)
 
     def satisfy(self):
         Requirement.satisfy(self)
@@ -30,7 +31,7 @@ class AptUpgrade(Requirement):
         for pkg in apt_cache.getChanges():
             print pkg.sourcePackageName,
         print "\nbegining apt-get upgrade"
-        apt_cache.commit()
+        self.result = apt_cache.commit()
 
 
 class AptReq(Requirement):
