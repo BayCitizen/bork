@@ -48,6 +48,10 @@ class PipReq(Requirement):
 
     def satisfy(self):
         import pip
+        exit = 0
         for package in self.packages:
-           pip.main(initial_args=['install', package])
+            exit = exit + pip.main(initial_args=['install', package])
 
+        def exit_status():
+            return not exit
+        self.satisfied = exit_status
