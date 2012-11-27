@@ -13,6 +13,8 @@ example.py is what I use to setup a new desktop enviroment for myself.  Runs via
 sudo python example.py
 ```
 
+Further Documentation and examples forthcoming. 
+
 Theme song:
 
 http://www.youtube.com/watch?v=jXKUb5A1auM
