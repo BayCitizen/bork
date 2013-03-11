@@ -14,8 +14,12 @@ class VirtualenvReq(Requirement):
             import virtualenv
         except ImportError:
             self.deps.append(PipReq(packages=['virtualenv']))
-        #interface with virtual env via a command line
-        self.deps.append(CommandReq(command='virtualenv %s --distribute' % directory))
+
+        # interface with virtualenv via a command line
+        env = CommandReq(
+            command='virtualenv %s --distribute' % directory,
+            unless='test -s "%s/bin/activate"' % directory)  # env already exists
+        self.deps.append(env)
         self.directory = directory
         self.requirements = requirements
         self.requirements_installed = not bool(requirements)
@@ -28,7 +32,7 @@ class VirtualenvReq(Requirement):
         if self.requirements:
             location = os.path.join(self.directory, 'bin', 'activate')
             command = "bash -c 'source %s && pip install -r %s'" % (location, self.requirements)
-            print('exicuting:', command)
+            print 'executing: %s' % command
             process = subprocess.Popen(command, shell=True)
             process.wait()
             self.requirements_installed = True
