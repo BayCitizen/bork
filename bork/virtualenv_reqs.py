@@ -31,7 +31,7 @@ class VirtualenvReq(Requirement):
     def satisfy(self):
         if self.requirements:
             location = os.path.join(self.directory, 'bin', 'activate')
-            command = "bash -c 'source %s && pip install -r %s'" % (location, self.requirements)
+            command = "bash -c 'source %s && pip install --allow-all-external -r %s'" % (location, self.requirements)
             print 'executing: %s' % command
             process = subprocess.Popen(command, shell=True)
             process.wait()
