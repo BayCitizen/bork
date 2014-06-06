@@ -23,6 +23,8 @@ class PipReq(Requirement):
         return "Pip requirement with packages %s " % ', '.join(self.packages) + self.deps_str()
 
     def satisfied(self):
+        if self.upgrade:
+            return False
         #vefifes that the package is installed
         #try pip freeze 
         process = subprocess.Popen(
