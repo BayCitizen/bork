@@ -10,10 +10,8 @@ class VirtualenvReq(Requirement):
         super(VirtualenvReq, self).__init__(*args, **kwargs)
         if not self.deps:
             self.deps = []
-        try:
-            import virtualenv
-        except ImportError:
-            self.deps.append(PipReq(packages=['virtualenv']))
+        # always pull in the latest virtualenv and pip
+        self.deps.append(PipReq(packages=['virtualenv'], upgrade=True))
 
         # interface with virtualenv via a command line
         env = CommandReq(
