@@ -13,7 +13,7 @@ class VirtualenvReq(Requirement):
         try:
             import virtualenv
         except ImportError:
-            self.deps.append(PipReq(packages=['virtualenv==1.10.1']))
+            self.deps.append(PipReq(packages=['virtualenv']))
 
         # interface with virtualenv via a command line
         env = CommandReq(
