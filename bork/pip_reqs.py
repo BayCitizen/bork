@@ -54,7 +54,7 @@ class PipReq(Requirement):
         args = ['install',]
         if self.upgrade:
             args.append('--upgrade')
-        args = args.extend(self.packages)
+        args.extend(self.packages)
         exit = pip.main(initial_args=args)
 
         def exit_status():
