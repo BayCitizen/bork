@@ -7,9 +7,10 @@ import subprocess
 #add support for requirement files
 
 class PipReq(Requirement):
-    def __init__(self, packages=None, *args, **kwargs):
-        super(PipReq, self).__init__(*args, **kwargs)
+    def __init__(self, packages=None, upgrade=False, *args, **kwargs):
         self.packages = packages
+        self.upgrade = upgrade
+        super(PipReq, self).__init__(*args, **kwargs)
 
         try:
             import pip
@@ -48,9 +49,11 @@ class PipReq(Requirement):
 
     def satisfy(self):
         import pip
-        exit = 0
-        for package in self.packages:
-            exit = exit + pip.main(initial_args=['install', package])
+        args = ['install',]
+        if self.upgrade:
+            args.append('--upgrade')
+        args = args.extend(self.packages)
+        exit = pip.main(initial_args=args)
 
         def exit_status():
             return not exit
